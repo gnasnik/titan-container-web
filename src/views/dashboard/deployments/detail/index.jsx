@@ -14,9 +14,11 @@ import {
   getDeploymentManifest, 
   updateDeployment, 
   getDeploymentLogs,
+  getDeploymentShell,
   getDeploymentDomains } from '@/api/deployment';
 import Editor from '@monaco-editor/react';
 import yaml from 'js-yaml';
+import Term from './term'
 
 const TabPane = Tabs.TabPane;
 const App = () => {
@@ -28,12 +30,24 @@ const App = () => {
   const [serviceOptions, setServiceOptions] = useState([]);
   const [serviceName, setServiceName] = useState('');
   const [domains, setDomains] = useState([]);
+  const [websocket, setWebsokcet] = useState('');
 
   const deploy = location.state;
 
   const params = {
     id: deploy.id
   }
+
+  const onGetDeploymentWebsocketURL = () => {
+    getDeploymentShell(params).then( res => {
+        console.log(res)
+      if (res.code == 0) {
+        setWebsokcet("ws://" + res.data.shell.Host + res.data.shell.ShellPath);
+      }else{
+        console.log(res.err);
+      }
+    })
+}
 
   const onGetDeploymentLogs = () =>{
     getDeploymentLogs(params).then((res) => {
@@ -95,6 +109,7 @@ const App = () => {
       default: return "Unkown"
     }
   }
+
 
   const onGetDeploymentManifest = () => {
     getDeploymentManifest(params).then((res) => {
@@ -167,17 +182,18 @@ const App = () => {
 
   const onClickTab = (key) => {
     if (key == 'details') {
-      onGetDeploymentManifest()
+      onGetDeploymentManifest();
     } else if (key == 'manifest') {
       onGetDeploymentManifest()
     } else if (key == 'logs') {
-      onGetDeploymentLogs()
+      onGetDeploymentLogs();
     }
   }
 
   useEffect(() => {
     onGetDeploymentManifest();
     onGetDeploymentDomains();
+    onGetDeploymentWebsocketURL();
   }, [])
 
     return (
@@ -189,7 +205,7 @@ const App = () => {
             <Typography.Text type=''>Domains: </Typography.Text>
             {domains? domains.map( (domain,index) => {
               return (
-                  <div style={{display: 'flex', marginTop: 10}}>
+                  <div  key={index} style={{display: 'flex', marginTop: 10}}>
                     {/* <Typography.Text key={index}>{domain}</Typography.Text> */}
                     <a href={domain} target='_blank' style={{color: '#165DFF'}}>{domain}</a>
                     <IconCopy style={{marginLeft: 10, fontSize: 18}} onClick={() => {
@@ -230,6 +246,9 @@ const App = () => {
             {logs.map((line, index) => {
               return <Typography.Paragraph key={index}>{line}</Typography.Paragraph> 
             })}
+            </TabPane>
+            <TabPane key='terminal' title='TERMINAL'>
+              <Term websocket={websocket}></Term>
             </TabPane>
             </Tabs>
         </Card>
