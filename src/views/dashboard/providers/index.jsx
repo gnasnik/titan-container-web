@@ -52,7 +52,7 @@ const columns = [
 ];
 
 const deploy = id => {
-    console.log(id)
+    
 }
 
 const App = () => {
@@ -61,7 +61,6 @@ const App = () => {
     const navigate  = useNavigate();
     const onGetProviders = () => {
         getProviders().then((res) => {
-            // console.log(res.data)
             setData(res.data.providers);
             setLoading(false);
         });

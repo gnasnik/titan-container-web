@@ -41,6 +41,14 @@ request({
   params
 })
 
+
+export const getDeploymentEvents = (params) => 
+request({
+  url: '/api/v1/container/deployment/events',
+  method: 'get',
+  params
+})
+
 export const getDeploymentDomains = (params) => 
 request({
   url: '/api/v1/container/deployment/domains',
@@ -48,6 +56,19 @@ request({
   params
 })
 
+export const addDeploymentDomain = (data) => 
+  request({
+    url: '/api/v1/container/deployment/domain/add',
+    method: 'post',
+    data
+  })
+
+export const deleteDeploymentDomain = (params) => 
+  request({
+    url: '/api/v1/container/deployment/domain/del',
+    method: 'post',
+    params
+})
 
 export const getDeploymentShell = (params) => 
 request({

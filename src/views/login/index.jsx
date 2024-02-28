@@ -40,7 +40,7 @@ export default function Login() {
          <main className="login-text container flex flex-col gap-8 p-10 justify-center text-center md:text-left">
           
           <h1 className="text-6xl font-bold decoration-blue-400">
-            Build Your Applications on <span className="font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-500  to-blue-500 font-black">Titan Container</span>
+            Deploy Your Applications on <span className="font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-500  to-blue-500 font-black">Titan Container</span>
           </h1>
           
           <Typography.Paragraph style={{ color: 'white', fontSize: 18}}>Titan Container is an important component of the Titan network. 

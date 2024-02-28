@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Card,
   Descriptions,
@@ -6,21 +6,24 @@ import {
   Typography,
   Button,
   Message,
-  Radio
+  Radio,
 } from '@arco-design/web-react';
-import { IconCopy } from '@arco-design/web-react/icon';
+import { IconCopy, IconPlus, IconMinus } from '@arco-design/web-react/icon';
 import { useLocation } from 'react-router-dom';
 import { 
   getDeploymentManifest, 
   updateDeployment, 
   getDeploymentLogs,
   getDeploymentShell,
+  deleteDeploymentDomain,
   getDeploymentDomains } from '@/api/deployment';
 import Editor from '@monaco-editor/react';
 import yaml from 'js-yaml';
 import Term from './term'
+import DomainConfigModal from './modal';
 
 const TabPane = Tabs.TabPane;
+
 const App = () => {
   const location = useLocation();
   const [deploymentDesc, setDeploymentDesc] = useState([]);
@@ -31,38 +34,43 @@ const App = () => {
   const [serviceName, setServiceName] = useState('');
   const [domains, setDomains] = useState([]);
   const [websocket, setWebsokcet] = useState('');
+  const [visibleModal, setVisibleModal] = useState(false);
 
   const deploy = location.state;
-
   const params = {
-    id: deploy.id
+    id: deploy.ID
   }
 
   const onGetDeploymentWebsocketURL = () => {
     getDeploymentShell(params).then( res => {
-        console.log(res)
       if (res.code == 0) {
-        setWebsokcet("ws://" + res.data.shell.Host + res.data.shell.ShellPath);
+        const scheme = res.data.shell.Scheme == "https" ? "wss://" : "ws://";
+        setWebsokcet(scheme + res.data.shell.Host + res.data.shell.ShellPath);
       }else{
         console.log(res.err);
       }
     })
 }
 
+
   const onGetDeploymentLogs = () =>{
     getDeploymentLogs(params).then((res) => {
-      let lines = [];
-      res.data.logs.map((serviceLogs) => {
-        serviceLogs.Logs.map((logLines) => {
-          logLines.split('\n').map((line) => {
-          lines.push(line);
-          })
+      if (res.code == 0) {
+        let lines = [];
+        res.data.logs.map((serviceLogs) => {
+          if (serviceLogs.Logs) {
+            serviceLogs.Logs.map((logLines) => {
+              logLines.split('\n').map((line) => {
+              lines.push(line);
+              })
+            })
+          }
         })
-      })
-      if (lines.length > 300) {
-          lines.slice(-300)
+        if (lines.length > 300) {
+            lines.slice(-300)
+        }
+        setLogs(lines);
       }
-      setLogs(lines);
     })
   }
 
@@ -80,36 +88,53 @@ const App = () => {
 
   const onGetDeploymentDomains = () => {
     getDeploymentDomains(params).then( (res) => {
-      console.log(res.data.domains);
-      const ds = res.data.domains.map( item => {
-         return 'https://' + item.Name
-      })
-      setDomains(ds);
+     if (res.code == 0) {
+          const ds = res.data.domains.map( item => {
+            return item.Name
+        })
+        setDomains(ds);
+     }
+    })
+  }
+
+  const onDelteDeploymentDomains = (params) => {
+    deleteDeploymentDomain(params).then( (res) => {
+      if (res.code == 0 ) {
+          Message.success('删除成功');
+          onGetDeploymentDomains();
+      }else{
+        Message.success('出错了');
+      }
     })
   }
 
   const formateService = (services) => {
       return services.map((service) => {
           const storage = service.Storage
-          delete service.Ports
+          const ports = service.Ports.map( (item) => {
+            return item.Port + '->' + item.ExposePort;
+          })
          
           let sum = 0;
           storage.map( s => { sum += s.Quantity})
           service.Storage = sum;
+          service.Ports = ports;
           
          return service
       })
   }
 
-  const parseState = (state) => {
-    switch (state) {
-      case 1 : return "Active"
-      case 2 : return "InActive"
-      case 3 : return "Deleted"
-      default: return "Unkown"
-    }
-  }
+  const getActiveState = (services) => {
+    if (services.length == 0) return 'InActive'
+    return services.map((service) => {
+       if (service.Status.TotalReplicas != service.Status.ReadyReplicas) {
+         return 'InActive'
+       }
+       return 'Active';
+     })
+   }
 
+  
 
   const onGetDeploymentManifest = () => {
     getDeploymentManifest(params).then((res) => {
@@ -119,25 +144,27 @@ const App = () => {
       data.Services.map(service => {
         services.push(service.Name);
       })
-      console.log(data);
+
       setManifest(yamlData);
       setServiceOptions(services);
 
       const service = formateService(data.Services)[0];
+      setServiceName(service.Name);
 
       const depDesc = [
         {
             label: 'ID',
-            value:  deploy.id,
+            value:  data.ID,
             span: 4,
         },
         {
           label: 'State',
-          value: parseState(data.State),
+          value: getActiveState(data.Services),
+          span: 4,
         },
         {
           label: 'CreatedTime',
-          value: deploy.created_time,
+          value: deploy.CreatedAt,
         }]
         
       const srvDesc =  [
@@ -173,6 +200,10 @@ const App = () => {
           label: 'Total',
           value: service.Status.TotalReplicas,
         },
+        {
+          label: 'Expose Port',
+          value: service.Ports,
+        },
       ];
 
       setServiceDesc(srvDesc);
@@ -199,15 +230,17 @@ const App = () => {
     return (
       <div style={{display: 'flex'}}>
          <Card style={{width: '100vw', padding: 20}}>
+            <DomainConfigModal visible={visibleModal} setVisible={setVisibleModal} id={deploy.ID} reload={onGetDeploymentDomains}></DomainConfigModal>
             <Typography.Title>Deployment detail</Typography.Title>
-            
             <Descriptions colon=' :' layout='inline-horizontal' size='large'  data={deploymentDesc} />
             <Typography.Text type=''>Domains: </Typography.Text>
+            <Button type='primary' shape='circle' size='mini' style={{marginLeft: 10}} icon={<IconPlus />} onClick={() => {setVisibleModal(true)}}/>
             {domains? domains.map( (domain,index) => {
               return (
                   <div  key={index} style={{display: 'flex', marginTop: 10}}>
-                    {/* <Typography.Text key={index}>{domain}</Typography.Text> */}
-                    <a href={domain} target='_blank' style={{color: '#165DFF'}}>{domain}</a>
+                    <Button type='primary' status='danger' shape='circle' size='mini' style={{marginRight: 10, width: 18, height:18}} icon={<IconMinus />} 
+                        onClick={() => { onDelteDeploymentDomains({id: deploy.ID, host: domain})}}/> 
+                    <a href={domain} target='_blank' style={{color: '#165DFF'}}>{ 'https://' + domain}</a>
                     <IconCopy style={{marginLeft: 10, fontSize: 18}} onClick={() => {
                         navigator.clipboard.writeText(domain);
                         Message.success("Copied");
@@ -244,11 +277,11 @@ const App = () => {
 
            <Button type='primary' style={{marginBottom: 20}} onClick={onGetDeploymentLogs}>Reflesh</Button>
             {logs.map((line, index) => {
-              return <Typography.Paragraph key={index}>{line}</Typography.Paragraph> 
+              return <Typography.Paragraph type={line.includes('Error') ? 'error': ''} key={index}>{line}</Typography.Paragraph> 
             })}
             </TabPane>
             <TabPane key='terminal' title='TERMINAL'>
-              <Term websocket={websocket}></Term>
+              <Term websocketUrl={websocket} serviceName={serviceName}></Term>
             </TabPane>
             </Tabs>
         </Card>

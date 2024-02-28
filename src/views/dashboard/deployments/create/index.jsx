@@ -37,9 +37,10 @@ function App({ route }) {
   const formRef = useRef();
   const [deployName, setDeployName] = useState('');
   const [persistent, setPersistent] = useState(false);
-  const [ephemeralStorageValue, setEphemeralStorageValue] = useState(0);
+  const [ephemeralStorageValue, setEphemeralStorageValue] = useState(100);
   const [persistentStorageValue, setPersistentStorageValue] = useState(0);
   const [protocolValue, setProtocolValue] = useState('');
+  const [envsValue, setEnvsValue] = useState('');
   const [portValue, setPortValue] = useState(0);
 //   const { providerId } = route.params;
 
@@ -75,6 +76,8 @@ function App({ route }) {
                             Persistent: persistent,
                             Mount: service.mount || '',
                         }]
+
+                        delete(service.mount);
                        
                         if (portValue > 0) {
                             service.Ports = [{
@@ -82,13 +85,27 @@ function App({ route }) {
                                 Port: portValue,
                             }]
                         }
+
+                        if (envsValue) {
+                            const env = envsValue.split(',');
+                            env.map(item => {
+                                const words = item.split("=");
+                                service.Env = { [words[0]]: words[1]}
+                            })
+                        }
+                        
+
+                        if (ephemeralStorageValue == 0 && persistentStorageValue == 0) {
+                            Message.error('ephemeral storage or persistent storage must set');
+                            return
+                        }
                         
                         const data = {
                             Name: deployName,
                             ProviderID: location.state,
                             Services:[service],
                         }
-                        // console.log(data);
+                 
                         createDeployment(data).then((res) => {
                             Message.info('创建成功！');
                             navigate("/dashboard/deployments");
@@ -126,7 +143,7 @@ function App({ route }) {
                 <FormItem label='Docker Image' field='Image' rules={[{ required: true }]}>
                 <Input placeholder='' style={{width: 480}} />
                 </FormItem>
-                <FormItem label='Service Name' field='Mame' >
+                <FormItem label='Service Name' field='Name' >
                 <Input placeholder='' style={{width: 480}} />
                 </FormItem>
                 <FormItem
@@ -155,13 +172,13 @@ function App({ route }) {
                         <FormItem label='Persistent Storage'>
                         <Slider step={100} max={5000} value={persistentStorageValue} showInput onChange={setPersistentStorageValue} style={{ width: 380 }}/>
                         </FormItem>
-                        <FormItem label='Mout Path' field='mount'>
+                        <FormItem label='Mount Path' field='mount'>
                         <Input placeholder='' style={{width: 480}} />
                         </FormItem>
                     </div>:
                  <></>}
-                <FormItem label='Environment Variables' field='Env'>
-                        <Input placeholder='Example: key: value' style={{width: 480}} />
+                <FormItem label='Environment Variables'>
+                        <Input placeholder='KEY1=VALUE1,KEY2=VALUE2' style={{width: 480}} value={envsValue} onChange={setEnvsValue}/>
                 </FormItem>
                 <FormItem label='Expose port' rules={[{ type: 'number' }]}>
                 <InputNumber value={portValue} onChange={setPortValue} style={{width: 180}} />
