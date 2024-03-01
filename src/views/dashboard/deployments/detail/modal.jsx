@@ -10,8 +10,8 @@ const DomainConfigModal = ({visible, setVisible, id, reload}) => {
     const [form] = Form.useForm();
 
     const onOk = () => {
-        console.log(form);
         form.validate().then((data) => {
+            console.log(data);
           setConfirmLoading(true);
 
           data.ID = id;
@@ -59,7 +59,7 @@ const DomainConfigModal = ({visible, setVisible, id, reload}) => {
         <Input placeholder=''   style={{ width: 400 }} />
         
       </FormItem>
-        <FormItem label='Cert' field='Cret'>
+        <FormItem label='Cert' field='Cert'>
             <TextArea placeholder='Please enter certificate crt' style={{ minHeight: 64, width: 350 }} /> 
         </FormItem>
         <FormItem label='Key' field='Key'>

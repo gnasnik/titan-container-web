@@ -1,9 +1,10 @@
 import request from '@/utils/request.js';
 
-export const getDeployments = () =>
+export const getDeployments = (params) =>
   request({
     url: '/api/v1/container/deployments',
-    method: 'get'
+    method: 'get',
+    params
   });
 
 export const getDeploymentManifest = (params) =>

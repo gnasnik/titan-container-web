@@ -97,7 +97,7 @@ function App({ route }) {
 
                         if (ephemeralStorageValue == 0 && persistentStorageValue == 0) {
                             Message.error('ephemeral storage or persistent storage must set');
-                            return
+                            return 
                         }
                         
                         const data = {

@@ -9,9 +9,30 @@ const styleGreen = { color: '#00B42A'};
 
 const App = () => {
     const [data, setData] = useState([]);
-    const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [pagination, setPagination] = useState({
+      sizeCanChange: true,
+      showTotal: true,
+      total: 0,
+      pageSize: 10,
+      current: 1,
+      pageSizeChangeResetCurrent: true,
+    });
     const navigate = useNavigate();
+
+    function onChangeTable(pagination) {
+      const { current, pageSize } = pagination;
+      setLoading(true);
+      getDeployments({page: current, size: pageSize}).then((res) => {
+        if (res.code == 0) {
+          setData(res.data.Deployments || []);
+          const total = res.data.Total;
+          setPagination((pagination) => ({ ...pagination, current, pageSize, total }));
+        }
+     
+        setLoading(false);
+      });
+    }
 
     const getActiveState = (services) => {
      if (services && services.length == 0) return 'Error'
@@ -90,10 +111,14 @@ const App = () => {
     }
 
     const onGetDeployments = () => {
-      getDeployments().then((res) => {
-      setData(res.data.Deployments || []);
-      setTotal(res.data.Total);
-      setLoading(false);
+      const { current, pageSize } = pagination;
+      getDeployments({page: current, size: pageSize}).then((res) => {
+      if (res.code == 0) {
+        setData(res.data.Deployments || []);
+        const total = res.data.Total;
+        setPagination((pagination) => ({ ...pagination, total }));
+        setLoading(false);
+      }
     });
     };
 
@@ -103,8 +128,11 @@ const App = () => {
     }, []);
 
   return <div>
-    <Typography.Text type='secondary' style={{marginBottom: 10}}> You have {total} deployments</Typography.Text>
-    <Table columns={columns} data={data} loading={loading} rowKey='ID' onRow={(record,index) => {
+    <Typography.Text type='secondary' style={{marginBottom: 10}}> You have {pagination.total} deployments</Typography.Text>
+    <Table columns={columns} data={data} loading={loading} rowKey='ID'
+    pagination={pagination}
+    onChange={onChangeTable}
+    onRow={(record,index) => {
       return { onClick: () => {navigate('/dashboard/deployments/detail', {state: data[index]})}}
     }} />
   </div>
