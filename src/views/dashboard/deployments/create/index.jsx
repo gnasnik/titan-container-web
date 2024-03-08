@@ -41,8 +41,9 @@ function App({ route }) {
   const [persistentStorageValue, setPersistentStorageValue] = useState(0);
   const [protocolValue, setProtocolValue] = useState('');
   const [envsValue, setEnvsValue] = useState('');
+  const [argsValue, setArgsValue] = useState('');
   const [portValue, setPortValue] = useState(0);
-//   const { providerId } = route.params;
+  const [exposPortValue, setExposPortValue] = useState(80);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -83,15 +84,25 @@ function App({ route }) {
                             service.Ports = [{
                                 Protocol: protocolValue,
                                 Port: portValue,
+                                ExposePort: exposPortValue,
                             }]
                         }
 
                         if (envsValue) {
-                            const env = envsValue.split(',');
-                            env.map(item => {
-                                const words = item.split("=");
-                                service.Env = { [words[0]]: words[1]}
-                            })
+                            const json = {};
+                            envsValue.split(",").forEach(pair => {
+                                const [key, val] = pair.split("=");
+                                json[key] = val;
+                            });
+                            service.Env = json;    
+                        }
+
+                        if (argsValue) {
+                            const args = [];
+                            argsValue.split(",").forEach(arg => {
+                                args.push(arg)
+                            });
+                            service.Arguments = args;
                         }
                         
 
@@ -180,8 +191,13 @@ function App({ route }) {
                 <FormItem label='Environment Variables'>
                         <Input placeholder='KEY1=VALUE1,KEY2=VALUE2' style={{width: 480}} value={envsValue} onChange={setEnvsValue}/>
                 </FormItem>
+                <FormItem label='Arguments Variables'>
+                        <Input placeholder='--requirepass password, --test' style={{width: 480}}  value={argsValue} onChange={setArgsValue}/>
+                </FormItem>
                 <FormItem label='Expose port' rules={[{ type: 'number' }]}>
                 <InputNumber value={portValue} onChange={setPortValue} style={{width: 180}} />
+                <span>--></span>
+                <InputNumber value={exposPortValue} onChange={setExposPortValue} style={{width: 180}} />
                 <Select style={{width: 80, marginLeft:24}} 
                     placeholder=''
                     value={protocolValue}
