@@ -79,7 +79,7 @@ const App = () => {
     const jsonData = JSON.stringify(yamlData);
     updateDeployment(jsonData).then( (res) => {
       if (res.code === 0) {
-        Message.success('修改成功')
+        Message.success('Success')
       }else {
         Message.error(res.err)
       }
@@ -100,7 +100,7 @@ const App = () => {
   const onDelteDeploymentDomains = (params) => {
     deleteDeploymentDomain(params).then( (res) => {
       if (res.code == 0 ) {
-          Message.success('删除成功');
+          Message.success('Success');
           onGetDeploymentDomains();
       }else{
         Message.success('出错了');

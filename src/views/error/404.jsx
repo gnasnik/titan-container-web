@@ -24,10 +24,10 @@ export default function Error404() {
           </Col>
           <Col xs={24} sm={24} md={12} lg={12} xl={12} xxl={12}>
             <div className={styles['error-content']}>
-              <Typography.Title type="primary">抱歉！</Typography.Title>
-              <Typography.Title heading={5}>当前页面不存在...</Typography.Title>
+              <Typography.Title type="primary">Sorry!</Typography.Title>
+              <Typography.Title heading={5}>The current page does not exist....</Typography.Title>
               <Typography.Text>
-                请检查您输入的网址是否正确，或点击下面的按钮返回首页
+              Please check if the URL you entered is correct, or click the button below to return to the homepage.
               </Typography.Text>
               <div className={styles['back-home']}>
                 <Button
@@ -36,7 +36,7 @@ export default function Error404() {
                   onClick={() => navigate('/')}
                   icon={<IconArrowLeft />}
                 >
-                  返回首页
+                  Back
                 </Button>
               </div>
             </div>

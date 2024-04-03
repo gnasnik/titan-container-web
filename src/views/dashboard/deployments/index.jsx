@@ -99,10 +99,10 @@ const App = () => {
     
       deleteDeployment({ID: id}).then( (res) => {
           if (res.code == 0) {
-            Message.success('删除成功！');
+            Message.success('Success');
             onGetDeployments();
           }else {
-            Message.error('删除出错了！');
+            Message.error('Error');
           }
         
       }).catch(error => {

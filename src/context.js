@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 
 export const GlobalContext = createContext({
-  lang: 'zh_CN',
+  lang: 'en-US',
   setLang: () => {},
   theme: '',
   setTheme: () => {}

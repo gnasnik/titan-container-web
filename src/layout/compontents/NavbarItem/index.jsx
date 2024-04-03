@@ -82,12 +82,12 @@ export default function NavBarItemCompontent() {
             width: 200
           }}
           prefix={<IconSearch />}
-          placeholder="请输入内容查询"
+          placeholder="Please enter the content to search"
         />
         <Tooltip
           position="bottom"
           trigger="hover"
-          content={`点击${isScreenfull ? '退出' : '切换'}全屏模式`}
+          content={`Switch ${isScreenfull ? 'Exit' : 'Switch'} Full screen `}
         >
           <Button
             shape="circle"
@@ -106,14 +106,14 @@ export default function NavBarItemCompontent() {
         >
           <Button shape="circle" icon={<IconLanguage />} />
         </Dropdown>
-        <Tooltip position="bottom" trigger="hover" content="点击页面配置">
+        <Tooltip position="bottom" trigger="hover" content="Page configuration">
           <Button shape="circle" icon={<IconSettings />} onClick={() => setVisible(true)} />
         </Tooltip>
         <Button shape="circle" icon={<IconNotification />} />
         <Tooltip
           position="bottom"
           trigger="hover"
-          content={`点击切换为${theme === 'light' ? '暗黑' : '亮色'}模式`}
+          content={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
         >
           <Button
             shape="circle"
@@ -121,7 +121,7 @@ export default function NavBarItemCompontent() {
             onClick={handleChangetheme}
           />
         </Tooltip>
-        <Tooltip position="bottom" trigger="hover" content="刷新">
+        <Tooltip position="bottom" trigger="hover" content="Refresh">
           <Button shape="circle" icon={<IconRefresh />} onClick={handlerChangeRefresh} />
         </Tooltip>
       </Space>
@@ -129,12 +129,12 @@ export default function NavBarItemCompontent() {
         width={332}
         title={
           <span>
-            <IconSettings /> 页面配置{' '}
+            <IconSettings /> Page configuration{' '}
           </span>
         }
         visible={visible}
-        okText="复制配置"
-        cancelText="关闭"
+        okText="Copy configuration"
+        cancelText="Close"
         onOk={() => {
           setVisible(false);
         }}
@@ -142,7 +142,7 @@ export default function NavBarItemCompontent() {
           setVisible(false);
         }}
       >
-        <Typography.Title heading={6}>主题色</Typography.Title>
+        <Typography.Title heading={6}>Theme</Typography.Title>
         <TwitterPicker width="100%" triangle="hide" />
         <ul className="ul">
           {list.map((item, index) => (
@@ -150,10 +150,10 @@ export default function NavBarItemCompontent() {
           ))}
         </ul>
         <Typography.Paragraph style={{ fontSize: 12 }}>
-          根据主题颜色生成的 10 个梯度色（将配置复制到项目中，主题色才能对亮色 / 暗黑模式同时生效）
+        10 gradient colors generated based on the theme color (copy the configuration to the project for the theme color to take effect in both light and dark mode).
         </Typography.Paragraph>
         <Divider />
-        <Typography.Title heading={6}>导航区域</Typography.Title>
+        <Typography.Title heading={6}>Navigation</Typography.Title>
         <Form
           className="setting-form"
           size="small"
@@ -162,21 +162,21 @@ export default function NavBarItemCompontent() {
           style={{ width: '100%' }}
           labelAlign="left"
         >
-          <FormItem label="显示搜索">
+          <FormItem label="Search">
             <Switch size="small" />
           </FormItem>
-          <FormItem label="显示全屏">
+          <FormItem label="Fullscreen">
             <Switch size="small" />
           </FormItem>
-          <FormItem label="显示语言">
+          <FormItem label="Language">
             <Switch size="small" />
           </FormItem>
-          <FormItem label="显示通知">
+          <FormItem label="Notifications">
             <Switch size="small" />
           </FormItem>
         </Form>
         <Divider />
-        <Typography.Title heading={6}>内容区域</Typography.Title>
+        <Typography.Title heading={6}>Content</Typography.Title>
         <Form
           className="setting-form"
           labelCol={{ span: 6 }}
@@ -184,7 +184,7 @@ export default function NavBarItemCompontent() {
           style={{ width: '100%' }}
           labelAlign="left"
         >
-          <FormItem label="菜单宽度">
+          <FormItem label="Menu width">
             <Slider />
           </FormItem>
         </Form>

@@ -70,10 +70,12 @@ const App = () => {
     const onGetProviders = () => {
       const { current, pageSize } = pagination;
         getProviders({page: current, size: pageSize}).then((res) => {
-            setData(res.data.providers);
+            if (res.code == 0) {
+              setData(res.data.providers);
             const total = res.data.Total || 0;
             setPagination((pagination) => ({...pagination, total}))
             setLoading(false);
+            }
         });
       };
 

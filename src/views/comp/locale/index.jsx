@@ -23,7 +23,7 @@ export default function LocaleCompontent() {
   const handlerChangeLang = (val) => {
     setLang(val);
     const langVal = val === 'zh-CN' ? '简体中文' : 'English';
-    Message.success(`已切换为${langVal}`);
+    // Message.success(`已切换为${langVal}`);
   };
 
   return (

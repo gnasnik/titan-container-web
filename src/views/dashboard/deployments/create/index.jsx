@@ -118,7 +118,7 @@ function App({ route }) {
                         }
                  
                         createDeployment(data).then((res) => {
-                            Message.info('创建成功！');
+                            Message.info('');
                             navigate("/dashboard/deployments");
                         }).catch(error => {
                             console.log(error)
@@ -126,7 +126,7 @@ function App({ route }) {
                     
                         } catch (error) {
                         console.log(formRef.current.getFieldsError());
-                        Message.error('请检查字段！');
+                        Message.error('Please check the fields!');
                         }
                     }
                     }}

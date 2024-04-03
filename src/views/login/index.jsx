@@ -54,7 +54,7 @@ export default function Login() {
       <div className="login-form">
         <div className="form-warp">
           {/* <Typography.Title>您好！</Typography.Title> */}
-          <Typography.Title heading={5}>登录Titan Container</Typography.Title>
+          <Typography.Title heading={5}>Login Titan Container</Typography.Title>
           <Form
             form={form}
             wrapperCol={{
@@ -72,30 +72,30 @@ export default function Login() {
                 rules={[
                   {
                     required: true,
-                    message: '用户名不能为空'
+                    message: 'The username cannot be empty'
                   }
                 ]}
               >
-                <Input prefix={<IconUser />} placeholder="请输入用户名" />
+                <Input prefix={<IconUser />} placeholder="Please enter your username" />
               </Form.Item>
               <Form.Item
                 field="password"
                 rules={[
                   {
                     required: true,
-                    message: '密码不能为空'
+                    message: 'The password cannot be empty'
                   }
                 ]}
               >
-                <Input.Password prefix={<IconSafe />} placeholder="请输入密码" />
+                <Input.Password prefix={<IconSafe />} placeholder="Please enter your password" />
               </Form.Item>
               <Form.Item className="forget-pwd">
-                <Checkbox>记住密码</Checkbox>
-                <Button type="text">忘记密码</Button>
+                <Checkbox>Remember password</Checkbox>
+                {/* <Button type="text">忘记密码</Button> */}
               </Form.Item>
               <Form.Item>
                 <Button type="primary" shape="round" htmlType="submit" long>
-                  登 录
+                  Login
                 </Button>
               </Form.Item>
             </Space>

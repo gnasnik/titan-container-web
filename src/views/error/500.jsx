@@ -21,12 +21,12 @@ export default function Error500() {
           </Col>
           <Col xs={24} sm={24} md={12} lg={12} xl={12} xxl={12}>
             <div className={styles['error-content']}>
-              <Typography.Title type="primary">抱歉！</Typography.Title>
-              <Typography.Title heading={5}>您没有权限去该页面...</Typography.Title>
-              <Typography.Text>请联系管理员，或点击下面按钮返回到首页</Typography.Text>
+              <Typography.Title type="primary">Sorry!</Typography.Title>
+              <Typography.Title heading={5}>You do not have permission to access this page...</Typography.Title>
+              <Typography.Text>Please contact the administrator or click the button below to return to the homepage.</Typography.Text>
               <div className={styles['back-home']}>
                 <Button shape="round" type="primary" icon={<IconArrowLeft />}>
-                  返回首页
+                  Back
                 </Button>
               </div>
             </div>

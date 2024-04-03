@@ -54,10 +54,10 @@ instance.interceptors.response.use(
     if (res.code == 401 && tokenLose) {
       tokenLose = false;
       Modal.confirm({
-        title: '重新登录',
-        content: '您已掉线，或者访问权限出错，请重新登录！',
-        okText: '确定',
-        cancelText: '取消',
+        title: 'ReLogin',
+        content: 'You have been disconnected or there is an error with your access rights. Please log in again.',
+        okText: 'OK',
+        cancelText: 'Cancel',
         onOk: () => {
           // 重新登录
           tokenLose = true;
@@ -78,7 +78,7 @@ instance.interceptors.response.use(
     return res;
   },
   (error) => {
-    Message.error('请求出错啦！');
+    Message.error('Error');
     return Promise.reject(error);
   }
 );

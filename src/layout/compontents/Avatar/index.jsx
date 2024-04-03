@@ -25,11 +25,11 @@ export default function AvatarCompontent() {
         <Menu onClickMenuItem={handleClickMenuItem}>
           <Menu.Item key="admin">
             <IconUser style={iconStyle} />
-            个人信息
+            Profile
           </Menu.Item>
           <Menu.Item key="logout">
             <IconPoweroff style={iconStyle} />
-            退出登录
+            Logout
           </Menu.Item>
         </Menu>
       }

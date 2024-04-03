@@ -50,7 +50,7 @@ const DomainConfigModal = ({visible, setVisible, id, reload}) => {
     confirmLoading={confirmLoading}
     onCancel={() => setVisible(false)}
   >
-    <Typography.Paragraph type='warning'> 注意： 如何使用自定义域名，必须要填写证书的 cert 和 key</Typography.Paragraph>
+    <Typography.Paragraph type='warning'> Note: To use a custom domain, you must provide the certificate's cert and key.</Typography.Paragraph>
     <Form
       {...formItemLayout}
       form={form}

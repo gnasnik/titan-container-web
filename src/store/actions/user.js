@@ -1,6 +1,5 @@
 /**
  * @description 用户模块action
- * @author hu-snail 1217437592@qq.com
  */
 
 // 引入action_type变量
@@ -51,14 +50,14 @@ export const setPermission = (payload, call) => async (dispatch) => {
 
 const getTimeStr = () => {
   const hour = new Date().getHours();
-  if (hour < 6) return '凌晨好！';
-  if (hour < 9) return '早上好！';
-  if (hour < 12) return '上午好！';
-  if (hour < 14) return '中午好！';
-  if (hour < 17) return '下午好！';
-  if (hour < 19) return '傍晚好！';
-  if (hour < 22) return '晚上好！';
-  return '深夜好！';
+  if (hour < 6) return 'Good morning!';
+  if (hour < 9) return 'Good morning!';
+  if (hour < 12) return 'Good morning!';
+  if (hour < 14) return 'Good afternoon!';
+  if (hour < 17) return 'Good afternoon!';
+  if (hour < 19) return 'Good evening!';
+  if (hour < 22) return 'Good evening!';
+  return 'Good late night!';
 };
 
 /**
@@ -76,9 +75,9 @@ export const loginHandler = (payload) => async (dispatch) => {
 
     Notification.success({
       title: `${thisTime}！`,
-      content: `👏欢迎登录${title}!`
+      content: `👏Welcome${title}!`
     });
-  } else Message.error(`登录接口异常，未正确返回${tokenName}...`);
+  } else Message.error(`Login interface exception, did not return correctly.  ${tokenName}...`);
   dispatch({
     type: LOGIN,
     payload: data.accessToken
@@ -111,7 +110,7 @@ export const getUserInfoHandler = (call) => async (dispatch) => {
   const { accessToken } = store.getState().userReducer;
   const { data } = await getUserInfo(accessToken);
   if (!data) {
-    return Message.error('验证失败，请重新登录...');
+    return Message.error('Verification failed. Please log in again');
   }
 
   const { username } = data;
@@ -122,7 +121,7 @@ export const getUserInfoHandler = (call) => async (dispatch) => {
       call
     });
   } else {
-    return Message.error('用户信息接口异常');
+    return Message.error('User information interface exception');
   }
 
   // const { permissions, username } = data;
