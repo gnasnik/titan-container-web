@@ -129,7 +129,7 @@ const App = () => {
 
   return <div>
     <Typography.Text type='secondary' style={{marginBottom: 10}}> You have {pagination.total} deployments</Typography.Text>
-    <Table columns={columns} data={data} loading={loading} rowKey='ID'
+    <Table columns={columns} data={data} loading={loading} rowKey='ID' noDataElement="No Data"
     pagination={pagination}
     onChange={onChangeTable}
     onRow={(record,index) => {

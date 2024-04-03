@@ -98,7 +98,7 @@ const App = () => {
         onGetProviders();
         }, []);
 
-  return <Table columns={columns} data={data} loading={loading} rowKey='id' 
+  return <Table columns={columns} data={data} loading={loading} rowKey='id'  noDataElement="No Data"
     pagination={pagination}
     onChange={onChangeTable}
     onRow={(record,index) => {
