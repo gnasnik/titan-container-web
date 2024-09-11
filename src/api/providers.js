@@ -6,3 +6,13 @@ export const getProviders = (params) =>
     method: 'get',
     params
   });
+
+
+  export const getAreaIds = (params) =>
+    request({
+      url: '/api/v1/container/areas',
+      method: 'get',
+      params
+    });
+  
+  

@@ -55,14 +55,14 @@ const DomainConfigModal = ({visible, setVisible, id, reload}) => {
       {...formItemLayout}
       form={form}
     >
-      <FormItem label='Host' field='Host'>
+      <FormItem label='Host' field='Hostname'>
         <Input placeholder=''   style={{ width: 400 }} />
         
       </FormItem>
-        <FormItem label='Cert' field='Cert'>
+        <FormItem label='Cert' field='Certificate'>
             <TextArea placeholder='Please enter certificate crt' style={{ minHeight: 64, width: 350 }} /> 
         </FormItem>
-        <FormItem label='Key' field='Key'>
+        <FormItem label='Key' field='PrivateKey'>
         <TextArea placeholder='Please enter certificate key' style={{ minHeight: 64, width: 350 }} /> 
         </FormItem>
     </Form>

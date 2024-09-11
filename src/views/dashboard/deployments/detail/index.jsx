@@ -16,11 +16,15 @@ import {
   getDeploymentLogs,
   getDeploymentShell,
   deleteDeploymentDomain,
-  getDeploymentDomains } from '@/api/deployment';
+  getDeploymentDomains,
+  getIngress,
+  updateIngress, 
+} from '@/api/deployment';
 import Editor from '@monaco-editor/react';
 import yaml from 'js-yaml';
 import Term from './term'
 import DomainConfigModal from './modal';
+import LogWindow from './logwindow';
 
 const TabPane = Tabs.TabPane;
 
@@ -33,19 +37,26 @@ const App = () => {
   const [serviceOptions, setServiceOptions] = useState([]);
   const [serviceName, setServiceName] = useState('');
   const [domains, setDomains] = useState([]);
-  const [websocket, setWebsokcet] = useState('');
+  const [websocket, setWebsokcet] = useState({});
   const [visibleModal, setVisibleModal] = useState(false);
+  const [ingress, setIngress] = useState('');
 
   const deploy = location.state;
   const params = {
-    id: deploy.ID
+    id: deploy.ID,
+    area_id: deploy.AreaId,
   }
+  
+  console.log(deploy)
 
   const onGetDeploymentWebsocketURL = () => {
     getDeploymentShell(params).then( res => {
       if (res.code == 0) {
-        const scheme = res.data.shell.Scheme == "https" ? "wss://" : "ws://";
-        setWebsokcet(scheme + res.data.shell.Host + res.data.shell.ShellPath);
+        const scheme = res.data.endpoint.Scheme == "https" ? "wss://" : "ws://";
+        const endpoint = res.data.endpoint;
+        const url = scheme + endpoint.Host + endpoint.ShellPath;
+      
+        setWebsokcet({url: url, token: endpoint.Token});
       }else{
         console.log(res.err);
       }
@@ -75,9 +86,36 @@ const App = () => {
   }
 
   const onUpdateDeployment = () => {
-    const yamlData = yaml.load(manifest);
+    let yamlData = yaml.load(manifest);
+    yamlData.AreaId = params.area_id;
     const jsonData = JSON.stringify(yamlData);
     updateDeployment(jsonData).then( (res) => {
+      if (res.code === 0) {
+        Message.success('Success')
+      }else {
+        Message.error(res.err)
+      }
+    })
+  }
+
+  const onGetIngress = () => {
+    getIngress(params).then((res) => {
+      if (res.code == 0) {
+
+        const data = res.data.ingress;
+        const yamlData = yaml.dump(data);
+  
+  
+        setIngress(yamlData);
+      
+      }
+    })
+  }
+
+  const onUpdateIngress = () => {
+    const yamlData = yaml.load(ingress);
+    const jsonData = JSON.stringify(yamlData);
+    updateIngress(params, jsonData).then( (res) => {
       if (res.code === 0) {
         Message.success('Success')
       }else {
@@ -93,6 +131,8 @@ const App = () => {
             return item.Name
         })
         setDomains(ds);
+     }else{
+        // Message.error('Get Domains: ', res);
      }
     })
   }
@@ -103,20 +143,29 @@ const App = () => {
           Message.success('Success');
           onGetDeploymentDomains();
       }else{
-        Message.success('出错了');
+        Message.error('出错了');
       }
     })
   }
 
   const formateService = (services) => {
-      return services.map((service) => {
-          const storage = service.Storage
-          const ports = service.Ports.map( (item) => {
-            return item.Port + '->' + item.ExposePort;
-          })
-         
-          let sum = 0;
-          storage.map( s => { sum += s.Quantity})
+      return services.map((service) => {          
+  
+          var ports = '';
+          if (service.Ports) {
+              ports = service.Ports.map( (item) => {
+              return item.Port + '->' + item.ExposePort;
+            })
+          }
+
+
+          var sum = 0;
+          if (service.Storage) {
+            service.Storage.map( (item) => {
+              sum += item.Quantity}
+            )}
+
+          
           service.Storage = sum;
           service.Ports = ports;
           
@@ -141,15 +190,42 @@ const App = () => {
       const data = res.data.deployment;
       const yamlData = yaml.dump(data);
       let services = [];
+      var isPersistent = 'false';
       data.Services.map(service => {
+        isPersistent = service.Storage.map(item => {return isPersistent | item.Persistent})  == 1 ?'true': 'false';
         services.push(service.Name);
       })
 
       setManifest(yamlData);
       setServiceOptions(services);
 
-      const service = formateService(data.Services)[0];
-      setServiceName(service.Name);
+      let urls = [];
+      var service = {
+        Image: '',
+        CPU: 0,
+        Memory: 0,
+        Storage: 0,
+        Ports: '',
+        Status: {
+          AvailableReplicas: '',
+          ReadyReplicas: '',
+          TotalReplicas: '',
+        }
+      };
+
+      if (data.Services.length > 0) {
+        if (data.Services[0].Ports) {
+          data.Services[0].Ports.map( (item) => {
+            urls.push( data.Services[0].Name + '-np.' + data.ID + ":"+ item.Port);
+          })
+        }
+        data.ClusterURL = urls;
+  
+        data.Persistent = isPersistent;
+  
+        service = formateService(data.Services)[0];
+        setServiceName(service.Name);
+      }
 
       const depDesc = [
         {
@@ -173,20 +249,32 @@ const App = () => {
           value: data.ProviderID,
         },
         {
+          label: 'ClusterURL',
+          value: data.ClusterURL,
+        },
+        {
           label: 'Image',
           value: service.Image,
           },
         {
-          label: 'CPU',
+          label: 'CPU(Cores)',
           value: service.CPU,
         },
         {
-          label: 'Memory',
-          value: service.Memory,
+          label: 'GPU(Cores)',
+          value: service.GPU,
         },
         {
-          label: 'Storage',
-          value: service.Storage,
+          label: 'Memory(GiB)',
+          value: service.Memory/1000,
+        },
+        {
+          label: 'Storage(GiB)',
+          value: service.Storage/1000,
+        },
+        {
+          label: 'Persistent',
+          value: data.Persistent,
         },
         {
           label: 'Available',
@@ -218,6 +306,8 @@ const App = () => {
       onGetDeploymentManifest()
     } else if (key == 'logs') {
       onGetDeploymentLogs();
+    }else if (key == 'ingress') {
+      onGetIngress();
     }
   }
 
@@ -225,6 +315,7 @@ const App = () => {
     onGetDeploymentManifest();
     onGetDeploymentDomains();
     onGetDeploymentWebsocketURL();
+    // onGetIngress();
   }, [])
 
     return (
@@ -240,7 +331,7 @@ const App = () => {
                   <div  key={index} style={{display: 'flex', marginTop: 10}}>
                     <Button type='primary' status='danger' shape='circle' size='mini' style={{marginRight: 10, width: 18, height:18}} icon={<IconMinus />} 
                         onClick={() => { onDelteDeploymentDomains({id: deploy.ID, host: domain})}}/> 
-                    <a href={domain} target='_blank' style={{color: '#165DFF'}}>{ 'https://' + domain}</a>
+                    <a href={'https://' + domain} target='_blank' style={{color: '#165DFF'}}>{'https://' + domain}</a>
                     <IconCopy style={{marginLeft: 10, fontSize: 18}} onClick={() => {
                         navigator.clipboard.writeText(domain);
                         Message.success("Copied");
@@ -273,15 +364,21 @@ const App = () => {
                 <Button type='primary' style={{ margin: 20}} onClick={onUpdateDeployment}>Update</Button>
                 <Editor height="60vh" value={manifest} onChange={setManifest}/>
             </TabPane>
-            <TabPane key='logs' title='LOGS'>
 
+            <TabPane key='logs' title='LOGS'>
            <Button type='primary' style={{marginBottom: 20}} onClick={onGetDeploymentLogs}>Reflesh</Button>
-            {logs.map((line, index) => {
+            {/* {logs.map((line, index) => {
               return <Typography.Paragraph type={line.includes('Error') ? 'error': ''} key={index}>{line}</Typography.Paragraph> 
-            })}
+            })} */}
+            <LogWindow logs={logs}></LogWindow>
+           
             </TabPane>
             <TabPane key='terminal' title='TERMINAL'>
-              <Term websocketUrl={websocket} serviceName={serviceName}></Term>
+              <Term websocket={websocket} serviceName={serviceName}></Term>
+            </TabPane>
+            <TabPane key='ingress' title='INGRESS'>
+                <Button type='primary' style={{ margin: 20}} onClick={onUpdateIngress}>Update</Button>
+                <Editor height="60vh" value={ingress} onChange={setIngress}/>
             </TabPane>
             </Tabs>
         </Card>

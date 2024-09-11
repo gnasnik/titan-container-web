@@ -18,7 +18,7 @@ export const createDeployment = (data) =>
   request({
     url: '/api/v1/container/deployment/create',
     method: 'post',
-    data
+    data,
   })
 
 export const deleteDeployment = (data) => 
@@ -77,3 +77,19 @@ request({
   method: 'get',
   params
 })
+
+
+export const getIngress = (params) => 
+  request({
+      url: '/api/v1/container/ingress',
+      method: 'get',
+      params
+  })
+
+export const updateIngress = (params, data) => 
+  request({
+      url: '/api/v1/container/ingress/update',
+      method: 'post',
+      data,
+      params
+  })

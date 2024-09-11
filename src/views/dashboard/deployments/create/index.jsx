@@ -37,20 +37,17 @@ function App({ route }) {
   const formRef = useRef();
   const [deployName, setDeployName] = useState('');
   const [persistent, setPersistent] = useState(false);
-  const [ephemeralStorageValue, setEphemeralStorageValue] = useState(100);
+  const [ephemeralStorageValue, setEphemeralStorageValue] = useState(0.1);
   const [persistentStorageValue, setPersistentStorageValue] = useState(0);
   const [protocolValue, setProtocolValue] = useState('');
   const [envsValue, setEnvsValue] = useState('');
   const [argsValue, setArgsValue] = useState('');
   const [portValue, setPortValue] = useState(0);
   const [exposPortValue, setExposPortValue] = useState(80);
+  const [replicas, setReplicas] = useState(1);
 
   const navigate = useNavigate();
   const location = useLocation();
-  const onGetDomains = () => {
-    
-  }
-
 
   useEffect(() => {
     // formRef.current.setFieldsValue({
@@ -72,8 +69,10 @@ function App({ route }) {
                         try {
                         await formRef.current.validate();
                         let service = formRef.current.getFields();
+                        service.Memory = service.Memory * 1000
+
                         service.Storage = [{
-                            Quantity: persistent ? persistentStorageValue: ephemeralStorageValue,
+                            Quantity: persistent ? persistentStorageValue*1000: ephemeralStorageValue*1000,
                             Persistent: persistent,
                             Mount: service.mount || '',
                         }]
@@ -104,22 +103,34 @@ function App({ route }) {
                             });
                             service.Arguments = args;
                         }
+
+                        if (replicas) {
+                            service.replicas = replicas;
+                        }
                         
 
                         if (ephemeralStorageValue == 0 && persistentStorageValue == 0) {
                             Message.error('ephemeral storage or persistent storage must set');
                             return 
                         }
+
                         
                         const data = {
                             Name: deployName,
-                            ProviderID: location.state,
+                            ProviderID: location.state.provider_id,
                             Services:[service],
+                            AreaId: location.state.area_id,
                         }
+
+                        console.log(data);
                  
                         createDeployment(data).then((res) => {
-                            Message.info('');
-                            navigate("/dashboard/deployments");
+                            if (res.code == 0) {
+                                navigate("/dashboard/deployments");
+                            }else{
+                                Message.error(res.message);
+                            }
+                            
                         }).catch(error => {
                             console.log(error)
                         })
@@ -144,7 +155,7 @@ function App({ route }) {
                 {...formItemLayout}
                 initialValues={{
                     CPU: 0.1,
-                    Memory: 100,
+                    Memory: 0.1,
                 }}
                 scrollToFirstError
             >
@@ -158,19 +169,25 @@ function App({ route }) {
                 <Input placeholder='' style={{width: 480}} />
                 </FormItem>
                 <FormItem
-                label='CPU'
+                label='CPU(cores)'
                 field='CPU'
                 >
-                <Slider step={0.1} max={1} showInput  style={{ width: 280 }}/>
+                <Slider step={0.1} max={200} showInput  style={{ width: 280 }}/>
                 </FormItem>
                 <FormItem
-                label='Memory'
+                label='GPU(cores)'
+                field='GPU'
+                >
+                <Slider step={0.1} max={200} showInput  style={{ width: 280 }}/>
+                </FormItem>
+                <FormItem
+                label='Memory(GiB)'
                 field='Memory'
                 >
-                <Slider step={100} max={500}  showInput  style={{ width: 280 }}/>
+                <Slider step={0.1} max={10000}  showInput  style={{ width: 280 }}/>
                 </FormItem>
-                <FormItem label='Ephemeral Storage'>
-                <Slider step={100} max={5000} value={ephemeralStorageValue} showInput onChange={setEphemeralStorageValue} style={{ width: 380 }}/>
+                <FormItem label='Ephemeral Storage(GiB)'>
+                <Slider step={0.1} max={10000} value={ephemeralStorageValue} showInput onChange={setEphemeralStorageValue} style={{ width: 380 }}/>
                 </FormItem>
                 <FormItem 
                 label='Persistent Storage'
@@ -180,8 +197,8 @@ function App({ route }) {
                 </FormItem>
                 { persistent ? 
                     <div>
-                        <FormItem label='Persistent Storage'>
-                        <Slider step={100} max={5000} value={persistentStorageValue} showInput onChange={setPersistentStorageValue} style={{ width: 380 }}/>
+                        <FormItem label='Persistent Storage(GiB)'>
+                        <Slider step={0.1} max={10000} value={persistentStorageValue} showInput onChange={setPersistentStorageValue} style={{ width: 380 }}/>
                         </FormItem>
                         <FormItem label='Mount Path' field='mount'>
                         <Input placeholder='' style={{width: 480}} />
@@ -214,7 +231,9 @@ function App({ route }) {
                     ]}
                 />
                 </FormItem>
-
+                <FormItem label='Replicas' rules={[{ type: 'number' }]}>
+                <InputNumber value={replicas} onChange={setReplicas} style={{width: 180}} />
+                </FormItem>
             </Form>
             
         </Card>

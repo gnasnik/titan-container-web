@@ -17,8 +17,8 @@ echoYellow() { echo $'\e[0;33m'"$1"$'\e[0m'; }
 if [ $? -eq 0 ];then
     echoGreen "docker build..."
     docker build . -t registry.cn-hongkong.aliyuncs.com/nft/container-web:$version  -f Dockerfile
-    #echoGreen "docker push"
-    #docker push registry.cn-hongkong.aliyuncs.com/nft/container-web:$version
+    echoGreen "docker push"
+    docker push registry.cn-hongkong.aliyuncs.com/nft/container-web:$version
 
 else
         echoRed "go build failed...."

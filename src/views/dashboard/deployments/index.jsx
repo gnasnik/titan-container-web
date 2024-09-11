@@ -1,7 +1,8 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { getDeployments, deleteDeployment } from '@/api/deployment';
-import { Button, Table, Typography, Message } from '@arco-design/web-react';
+import { getAreaIds } from '@/api/providers';
+import { Button, Table, Typography, Message, Modal, Card, Select} from '@arco-design/web-react';
 import { useNavigate } from 'react-router-dom';
 
 const styleYellow = { color: '#F7BA1E' };
@@ -9,7 +10,10 @@ const styleGreen = { color: '#00B42A'};
 
 const App = () => {
     const [data, setData] = useState([]);
+    const [areaIds, setAreaIds] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [toDeleteID, setToDeleteID] = useState('');
+    const [showModal, setShowModal] = useState(false);
     const [pagination, setPagination] = useState({
       sizeCanChange: true,
       showTotal: true,
@@ -19,6 +23,9 @@ const App = () => {
       pageSizeChangeResetCurrent: true,
     });
     const navigate = useNavigate();
+    const Option = Select.Option;
+
+    const [selectedValue, setSelectedValue] = useState(localStorage.getItem('deployAreaSelected') || 'Asia-China-Guangdong-Shenzhen');
 
     function onChangeTable(pagination) {
       const { current, pageSize } = pagination;
@@ -54,8 +61,8 @@ const App = () => {
         dataIndex: 'Name'
       },
       {
-        title: 'Owner',
-        dataIndex: 'Owner'
+        title: 'ProviderID',
+        dataIndex: 'ProviderID'
       },
       {
         title: 'State',
@@ -63,6 +70,14 @@ const App = () => {
         render: (col, record, index) => (
           <span style={ getActiveState(record.Services) == 'Active' ? styleGreen : styleYellow }>
             { getActiveState(record.Services)}
+          </span>
+        ),
+      },
+      {
+        title: 'ErrorMessage',
+        render: (col, record, index) => (
+          <span>
+            { record.Services[0]? record.Services[0].ErrorMessage : ''}
           </span>
         ),
       },
@@ -96,23 +111,30 @@ const App = () => {
 
     const deleteRow = (e,id) => {
       e.stopPropagation();
-    
-      deleteDeployment({ID: id}).then( (res) => {
-          if (res.code == 0) {
-            Message.success('Success');
-            onGetDeployments();
-          }else {
-            Message.error('Error');
-          }
-        
-      }).catch(error => {
-          Message.info(error);
-      })
+
+      setShowModal(true)
+      setToDeleteID(id)
     }
 
-    const onGetDeployments = () => {
-      const { current, pageSize } = pagination;
-      getDeployments({page: current, size: pageSize}).then((res) => {
+    const comfirmDelete = () => {
+      deleteDeployment({ area_id: selectedValue, id: toDeleteID}).then( (res) => {
+        if (res.code == 0) {
+          Message.success('Success');
+          initialDeployments();
+        }else {
+          Message.error('Error');
+        }
+
+        setShowModal(false)
+      
+    }).catch(error => {
+        Message.info(error);
+    })
+    }
+
+    const onGetDeployments = (params) => {
+      // const { current, pageSize } = pagination;
+      getDeployments(params).then((res) => {
       if (res.code == 0) {
         setData(res.data.Deployments || []);
         const total = res.data.Total;
@@ -122,19 +144,73 @@ const App = () => {
     });
     };
 
+    const initialDeployments = () => {
+      const { current, pageSize } = pagination;
+      onGetDeployments({area_id: selectedValue, page: current, size: pageSize})
+    }
+
+    const onGetAreaIds = () => {
+      getAreaIds().then((res) => {
+          if (res.code == 0) {
+            setAreaIds(res.data.area_ids);
+          }
+      });
+    }
+
+    const onChangeArea = (areaId) => {
+      setSelectedValue(areaId);
+      localStorage.setItem('deployAreaSelected', areaId);
+
+      const { current, pageSize } = pagination;
+      setLoading(true);
+      onGetDeployments({area_id: areaId, page: current, size: pageSize});
+    }
+
     useEffect(() => {
       setLoading(true);
-      onGetDeployments();
+      onGetAreaIds();
+      initialDeployments();
     }, []);
 
   return <div>
-    <Typography.Text type='secondary' style={{marginBottom: 10}}> You have {pagination.total} deployments</Typography.Text>
+    <Card style={{ marginBottom: 20}}>
+    <label>Area: </label>
+    <Select 
+      placeholder='Select' style={{ width: 300}} 
+      value={selectedValue}
+      onChange = {onChangeArea}
+      >
+      {areaIds.map((areaId, index) => (
+        <Option key={areaId}  value={areaId}>
+          {areaId}
+        </Option>
+      ))}
+    </Select>
+    </Card>
+    {/* <Typography.Text type='secondary' style={{marginBottom: 10}}> You have {pagination.total} deployments</Typography.Text> */}
     <Table columns={columns} data={data} loading={loading} rowKey='ID' noDataElement="No Data"
     pagination={pagination}
     onChange={onChangeTable}
+    style={{paddingLeft: 10, paddingRight:10}}
     onRow={(record,index) => {
-      return { onClick: () => {navigate('/dashboard/deployments/detail', {state: data[index]})}}
+      return { onClick: () => {
+        let passData = data[index]
+        passData.AreaId = selectedValue
+        navigate('/dashboard/deployments/detail', {state: passData})
+      }}
     }} />
+    <div>
+      <Modal
+        title='Are you sure?'
+        visible={showModal}
+        onOk={() => comfirmDelete()}
+        onCancel={() => setShowModal(false)}
+        autoFocus={false}
+        focusLock={true}
+      >
+        <p> Are you sure to DElETE the deployment ?</p>
+      </Modal>
+    </div>
   </div>
 
 

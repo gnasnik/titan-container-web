@@ -2,11 +2,11 @@ import request from '@/utils/request.js';
 import { setting } from '@/config/setting';
 
 const { tokenName } = setting;
-export const login = async (params) =>
+export const login = async (data) =>
   request({
     url: '/api/v1/user/login',
     method: 'post',
-    params
+    data
   });
 
 export const getUserInfo = (accessToken) =>

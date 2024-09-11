@@ -4,7 +4,8 @@ import { Terminal, ITerminalOptions, ITerminalInitOnlyOptions } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import "xterm/css/xterm.css"
 
-const Term = ({websocketUrl, serviceName}) => {
+
+const Term = ({websocket, serviceName}) => {
     const options = { ...ITerminalOptions, ...ITerminalInitOnlyOptions };
     const term = new Terminal({  
             rendererType: 'canvas',  
@@ -12,7 +13,7 @@ const Term = ({websocketUrl, serviceName}) => {
             convertEol: true,  
             disableStdin: false,
             scrollback: 0,  
-            rows: 60,
+            rows: 30,
             cols: 100,
             options,
             theme: {    
@@ -22,13 +23,17 @@ const Term = ({websocketUrl, serviceName}) => {
                 lineHeight: 20
             }
         });
+    
 
     term.prompt = () => {
         term.write('\r\n\u001b[32m\u001b[37m');
     };
 
-    const connectStr = `${websocketUrl}?cmd0=sh&pod=${serviceName}&tty=1&stdin=1`;
+    const podName = serviceName.split("-np")[0];
+    const connectStr = `${websocket.url}?cmd0=sh&pod=${podName}&tty=1&stdin=1&token=${websocket.token}`;
     const socket = new WebSocket(connectStr);
+
+    console.log(connectStr)
     
     let count = 0;
     useEffect(() => {
@@ -45,27 +50,27 @@ const Term = ({websocketUrl, serviceName}) => {
         console.log(size)
     })
 
-    term.onKey((e) => {
+    term.onKey((keyEvent) => {
+        const { key, domEvent } = keyEvent;
+
         const printable =
-        !e.domEvent.altKey &&
-        !e.domEvent.altGraphKey &&
-        !e.domEvent.ctrlKey &&
-        !e.domEvent.metaKey
+        !domEvent.altKey &&
+        !domEvent.altGraphKey &&
+        !domEvent.ctrlKey &&
+        !domEvent.metaKey
 
-        // if (e.domEvent.code == 'ArrowUp' || e.domEvent.code == 'ArrowDown' || e.domEvent.code == 'ArrowLeft' || e.domEvent.code == 'ArrowRight') {
-        //     printable = false
-        // }
-                
+        const isArrow = (domEvent.code == 'ArrowUp' || domEvent.code == 'ArrowDown' || domEvent.code == 'ArrowLeft' || domEvent.code == 'ArrowRight')
+    
         if (printable) {
-            if (e.domEvent.code != 'Backspace' && e.domEvent.code != 'Tab' ) {
-                term.write(e.key);
+            if (domEvent.code != 'Backspace' && domEvent.code != 'Tab' && !isArrow ) {
+                term.write(key);
             }   
-            // term.write(e.key);
         }
-
-        Send(e.key);
+            
+        Send(key);
 
     });
+
     
     // ShellCodeStdout         = 100 0x64
     // ShellCodeStderr         = 101 0x65
@@ -74,10 +79,6 @@ const Term = ({websocketUrl, serviceName}) => {
     // ShellCodeStdin          = 104 0x68
     // ShellCodeTerminalResize = 105 0x69
     // ShellCodeEOF            = 106 0x6a
-
-    // const Resize = (e) => {
-    //     SendResize(e.target.innerWidth, e.target.innerHeight);
-    // }
 
     const SendResize = (width, height) => {
         var buffer = new ArrayBuffer(5);
@@ -137,6 +138,7 @@ const Term = ({websocketUrl, serviceName}) => {
         const height = container.parentElement.clientHeight;
         SendResize(width, height);
     } );
+
         
     socket.onopen = function () {      
         operate.onConnect();
@@ -150,7 +152,7 @@ const Term = ({websocketUrl, serviceName}) => {
             const msgId = bytes.slice(0,1).toString();
             const decoder = new TextDecoder("utf-8");
             const msg = decoder.decode(bytes.slice(1));
-            console.log(msgId, msg)
+            // console.log(msgId, msg)
             // stdout
             if (msgId == 100 && msg.length > 1) {
                 operate.onData(msg);   
@@ -168,7 +170,11 @@ const Term = ({websocketUrl, serviceName}) => {
         }
         reader.readAsArrayBuffer(evt.data);
     };    
-        
+
+    socket.onerror = function(evt) {
+        operate.onError(evt.error)
+    }        
+
     socket.onclose = function (evt) {
         operate.onClose();
     };  
